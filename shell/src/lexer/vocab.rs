@@ -42,7 +42,6 @@ pub enum Vocabulary {
     Semicolon, // ;
     Then, // then
     Until, // until
-    Varassignment, // test=3
     While, // while
 }
 
@@ -93,14 +92,12 @@ pub fn map_to_vocab(representation: &str) -> Vocabulary {
         "$("    => Vocabulary::DollarOpenParenthese,
         "$(("   => Vocabulary::DollarOpenParentheseParenthese,
         "))"    => Vocabulary::CloseParentheseParenthese,
-        contains_eq if contains_eq.contains('=') 
-                => Vocabulary::Varassignment,
         _       => Vocabulary::Word
     }
 }
 
 pub fn is_part_of_operator(representation: String, c: char) -> bool {
-    let operators = vec![";", "!", "&", "&&", "(", ")", ";;", "<", "<&", "<<", "<<-", "<>", ">", ">&", ">>", ">|", "\n", "`", "{", "|", "||", "}"];
+    let operators = vec!["$", "$(", "$((", "))", ";", "!", "&", "&&", "(", ")", ";;", "<", "<&", "<<", "<<-", "<>", ">", ">&", ">>", ">|", "\n", "`", "{", "|", "||", "}"];
     let mut new_word: String = representation;
     new_word.push(c);
     operators.contains(&new_word.as_str())
