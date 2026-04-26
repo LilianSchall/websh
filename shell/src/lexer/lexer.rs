@@ -1,170 +1,134 @@
+use crate::lexer::input_iter::InputIterator;
+
 use super::token::Token;
-use super::vocab::{generate_mapper, generate_separators, Vocabulary};
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
+use super::quoted_mode::QuotedMode;
+use super::vocab::{is_part_of_operator};
 
-pub struct Lexer {
-    pub mapper: HashMap<String, Vocabulary>,
-    pub separators: Vec<char>,
-    pub position: usize,
-    pub len: usize,
-    pub input: Vec<char>,
-    pub token_quoted: bool
+pub struct Lexer<'a> {
+    input: &'a str,
+    index: usize,
+    pub current_token: Option<Token>
 }
 
-impl Iterator for Lexer {
-    type Item = Token;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.position >= self.len {
-            return None;
-        }
-
-        let current: Rc<RefCell<String>> = Rc::new(RefCell::new(String::new()));
-        let mut c = self.input[self.position];
-        while self.position < self.len && self.is_whitespace(c) {
-            self.position += 1;
-            c = self.input[self.position];
-        }
-
-        // operators handling
-        while self.position < self.len
-            && (self.separators.contains(&c) || current.borrow().len() > 0)
-        {
-            self.position += 1;
-            match self.craft_operator(Rc::clone(&current), c) {
-                Some(v) => return Some(Token::new(current.borrow().clone(), v)),
-                None => (),
-            }
-            c = self.input[self.position];
-        }
-
-        while self.position < self.len && !self.separators.contains(&c) {
-            self.position += 1;
-
-            // quoting and miscellaneous handling
-            match c {
-                '\\' => self.get_escaped_char(Rc::clone(&current)),
-                '\'' => self.get_quoted_string(Rc::clone(&current)),
-                '"' => self.get_double_quoted_string(Rc::clone(&current)),
-                '#' => self.skip_comment(),
-                _ => current.borrow_mut().push(c),
-            }
-            c = self.input[self.position];
-        }
-
-        while self.position < self.len && self.is_whitespace(self.input[self.position]) {
-            self.position += 1;
-        }
-
-        let result: String = current.borrow().clone();
-
-        let token = match self.mapper.get(&result) {
-            None => Some(Token::new(result, Vocabulary::Word)),
-            Some(v) => return Some(
-                Token::new(
-                    result, 
-                    if self.token_quoted { Vocabulary::Word } else { *v }
-                    )
-                ),
-        };
-
-        self.token_quoted = false;
-        token
-    }
-}
-
-impl Lexer {
-    pub fn new(input: String) -> Self {
-        let mapper = generate_mapper();
-        let separators = generate_separators();
-        let mut vec: Vec<char> = input.chars().collect();
-        vec.push('\0');
-        Lexer {
-            mapper,
-            separators,
-            position: 0,
-            len: vec.len() - 1,
-            input: vec,
-            token_quoted: false
-        }
+impl <'a> Lexer<'a> {
+    pub fn new(
+        input: &'a str,
+        index: usize,
+        current_token: Option<Token>
+    ) -> Lexer<'a>
+    {
+        Lexer { input, index, current_token }
     }
 
-    fn is_whitespace(&self, c: char) -> bool {
-        c == ' ' || c == '\t' || c == '\n' || c == '\r'
+    pub fn init(input: &'a str) -> Lexer<'a>
+    {
+        Lexer::new(input, 0, None)
     }
 
-    fn get_escaped_char(&mut self, current: Rc<RefCell<String>>) {
-        if self.position >= self.len {
-            return;
+    pub fn consume(&self) -> Lexer<'a> {
+        if self.index >= self.input.len() {
+            return Lexer::new(self.input, self.index, None);
         }
 
-        let c = self.input[self.position];
-        match c {
-            '\n' => (),
-            _ => current.borrow_mut().push(c),
-        }
-        self.position += 1;
-    }
+        let mut quoted_mode: QuotedMode = QuotedMode::None;
+        let mut building_operator: bool = false;
+        let mut builder: String = String::with_capacity(100);
+        println!("Input: {}, index: {}", self.input[self.index..].to_string(), self.index);
+        let mut iter = InputIterator::new(&self.input[self.index..]);
 
-    fn get_quoted_string(&mut self, current: Rc<RefCell<String>>) {
-        println!("get_quoted_string");
-        self.token_quoted = true;
-        while self.position < self.len {
-            let c = self.input[self.position];
-            self.position += 1;
-
-            if c == '\'' {
-                break;
-            }
-
-            current.borrow_mut().push(c);
-        }
-    }
-
-    fn get_double_quoted_string(&mut self, current: Rc<RefCell<String>>) {
-        self.token_quoted = true;
-        while self.position < self.len {
-            let c = self.input[self.position];
-            self.position += 1;
-
-            if c == '"' {
-                break;
-            }
-            if c == '\\' {
-                self.get_escaped_char(Rc::clone(&current));
-            }
-            else {
-                current.borrow_mut().push(c);
-            }
-        }
-    }
-
-    fn skip_comment(&mut self) {
-        while self.position < self.input.len() && self.input[self.position] != '\n' {
-            self.position += 1;
-        }
-    }
-
-    fn craft_operator(&mut self, current: Rc<RefCell<String>>, c: char) -> Option<Vocabulary> {
-        let mut borrowed = current.borrow_mut();
-        borrowed.push(c);
-        let option = match self.mapper.get(borrowed.as_str()) {
-            None => {
-                self.position -= 1;
-                borrowed.pop();
-                match self.mapper.get(borrowed.as_str()) {
-                    None => panic!("Unknown token: {}", borrowed),
-                    Some(v) => Some(*v),
+        while let Some(_) = iter.next() {
+            println!("Current char: {:?}", iter.peek());
+            if !quoted_mode.is_quoted() {
+                if let Some(x) = process_unquoted(&mut builder,&mut iter,  &mut building_operator, &mut quoted_mode) {
+                    println!("Token found: {}, index: {}", x, iter.get_index());
+                    return Lexer::new(self.input, self.index + iter.get_index(), Some(x));
                 }
             }
-            _ => None,
-        };
-
-        if option.is_none() {
-            return None;
+            else {
+                /*if let Some(x) = process_quoted(&mut builder, &mut iter, &mut quoted_mode) {
+                    return Lexer::new(self.input, iter.get_index(), Some(x));
+                }*/
+            }
         }
-        option
+
+        match builder.is_empty() {
+            true => Lexer::new(self.input, self.index + iter.get_index(), None),
+            false => {
+                let token = Token::from_str(builder.as_str());
+                Lexer::new(self.input, self.index + iter.get_index(), Some(token))
+            }
+        }
     }
+}
+
+fn process_unquoted(
+    builder: &mut String,
+    iter: &mut InputIterator,
+    building_operator: &mut bool,
+    quoted_mode: &mut QuotedMode
+    ) -> Option<Token> {
+    let current_char = iter.peek().unwrap();
+    if is_part_of_operator(builder.clone(), current_char) {
+        *building_operator = true;
+        builder.push(current_char);
+        return None;
+    }
+
+    // else, if we are building an operator but the current char is not part of it, we need to
+    // finalize the operator token and return it
+    if *building_operator {
+        let token = Token::from_str(builder.as_str());
+        iter.block_next();
+        return Some(token);
+    }
+    else if current_char == '\'' {
+        *quoted_mode = QuotedMode::Single;
+        return None;
+    }
+    else if current_char == '"' {
+        *quoted_mode = QuotedMode::Double;
+        return None;
+    }
+    else if current_char == '\\' {
+        *quoted_mode = QuotedMode::Backslash;
+        return None;
+    }
+    else if is_part_of_operator("".to_string(), current_char) {
+        iter.block_next();
+        if !builder.is_empty() {
+            let token = Token::from_str(builder.as_str());
+            return Some(token);
+        }
+    }
+    else if current_char.is_whitespace() {
+        if !builder.is_empty() {
+            let token = Token::from_str(builder.as_str());
+            return Some(token);
+        }
+    }
+    else if current_char == '#' {
+        if !builder.is_empty() {
+            let token = Token::from_str(builder.as_str());
+            return Some(token);
+        }
+        while let Some(c) = iter.next() {
+            if c == '\n' {
+                break;
+            }
+        }
+        return None;
+    }
+    else {
+        builder.push(current_char);
+        println!("Builder: {}", builder);
+    }
+    None
+}
+
+fn process_quoted<'a>(
+    builder: &mut String,
+    current_char: char,
+    quoted_mode: &mut QuotedMode
+    ) -> Option<Token> {
+    None
 }

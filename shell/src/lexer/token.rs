@@ -1,4 +1,4 @@
-use super::vocab::Vocabulary;
+use super::vocab::{map_to_vocab, Vocabulary};
 use std::fmt;
 
 
@@ -15,6 +15,11 @@ impl Token {
             representation,
             vocab_type,
         }
+    }
+
+    pub fn from_str(s: &str) -> Token {
+        let vocabulary: Vocabulary = map_to_vocab(s);
+        Token::new(s.to_string(), vocabulary)
     }
 }
 

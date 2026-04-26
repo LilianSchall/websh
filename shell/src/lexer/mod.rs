@@ -2,6 +2,8 @@ pub mod vocab;
 mod lexer;
 mod token;
 mod tests;
+mod input_iter;
+mod quoted_mode;
 
 pub use token::Token;
 pub use vocab::Vocabulary;
