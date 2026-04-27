@@ -1,5 +1,12 @@
 use crate::lexer::Lexer;
 
+#[derive(Debug, Clone)]
+pub enum ParseError {
+    UnexpectedToken(String),
+    InvalidIoNumber(String),
+    EndOfInput,
+}
+
 pub trait Parseable {
-    fn parse(&self, lexer: &mut Lexer) -> Option<Self> where Self: Sized;
+    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError> where Self: Sized;
 }
