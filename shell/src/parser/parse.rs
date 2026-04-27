@@ -1,5 +1,7 @@
-use crate::lexer::Lexer;
+use crate::lexer::{Lexer, Token, Vocabulary};
 
-pub fn parse(lexer: &mut Lexer) -> Option<()> {
-    None
+use crate::parser::CompleteCommand;
+
+pub fn parse(lexer: &mut Lexer) -> Option<CompleteCommand> {
+    todo!()
 }

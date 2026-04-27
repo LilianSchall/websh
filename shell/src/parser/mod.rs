@@ -43,5 +43,8 @@ mod simple_command;
 mod subshell;
 mod term;
 mod until_clause;
+mod while_clause;
+mod wordlist;
 
+pub use complete_command::CompleteCommand;
 pub use parse::parse;
