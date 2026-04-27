@@ -6,25 +6,25 @@ use std::fmt;
 #[derive(PartialEq)]
 pub struct Token {
     pub representation: String,
-    pub vocab_type: Vocabulary,
+    pub vocab: Vocabulary,
 }
 
 impl Token {
-    pub fn new(representation: String, vocab_type: Vocabulary) -> Self {
+    pub fn new(representation: String, vocab: Vocabulary) -> Self {
         Token {
             representation,
-            vocab_type,
+            vocab,
         }
     }
 
     pub fn from_str(s: &str) -> Token {
-        let vocabulary: Vocabulary = map_to_vocab(s);
-        Token::new(s.to_string(), vocabulary)
+        let vocab: Vocabulary = map_to_vocab(s);
+        Token::new(s.to_string(), vocab)
     }
 }
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Token: {} -> {}", self.representation, self.vocab_type)
+        write!(f, "Token: {} -> {}", self.representation, self.vocab)
     }
 }

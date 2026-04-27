@@ -5,8 +5,7 @@ fn lex_all(input: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
 
     loop {
-        lexer = lexer.consume();
-        match lexer.current_token.clone() {
+        match lexer.next() {
             Some(token) => tokens.push(token),
             None => break,
         }
@@ -18,6 +17,26 @@ fn lex_all(input: &str) -> Vec<Token> {
 fn assert_tokens(input: &str, expected: Vec<Token>) {
     let tokens = lex_all(input);
     assert_eq!(tokens, expected);
+}
+
+#[test]
+fn lexer_newline() {
+    assert_tokens(
+        "\n",
+        vec![Token::new("\n".to_string(), Vocabulary::Newline)],
+    );
+}
+
+#[test]
+fn lexer_multiple_newlines_and_stops_on_non_newline() {
+    assert_tokens(
+        "\n\nnext",
+        vec![
+            Token::new("\n".to_string(), Vocabulary::Newline),
+            Token::new("\n".to_string(), Vocabulary::Newline),
+            Token::new("next".to_string(), Vocabulary::Word),
+        ],
+    );
 }
 
 #[test]
@@ -55,6 +74,17 @@ fn lexer_newline_is_a_token_separator() {
         ],
     );
 }
+#[test]
+fn lexer_whitespace_is_a_token_separator_followed_by_newline() {
+    assert_tokens(
+        "a \nb",
+        vec![
+            Token::new("a".to_string(), Vocabulary::Word),
+            Token::new("\n".to_string(), Vocabulary::Newline),
+            Token::new("b".to_string(), Vocabulary::Word),
+        ],
+    );
+}
 
 #[test]
 fn lexer_all_basic_operators() {
@@ -62,7 +92,7 @@ fn lexer_all_basic_operators() {
         "! & && ( ) ;; < <& << <<- <> > >& >> >| ` { | || } ;",
         vec![
             Token::new("!".to_string(), Vocabulary::Neg),
-            Token::new("&".to_string(), Vocabulary::Amperstand),
+            Token::new("&".to_string(), Vocabulary::Ampersand),
             Token::new("&&".to_string(), Vocabulary::And),
             Token::new("(".to_string(), Vocabulary::OpenParenthese),
             Token::new(")".to_string(), Vocabulary::CloseParenthese),

@@ -1,9 +1,10 @@
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 
 #[derive(Hash, Eq, PartialEq, Debug, Clone, Copy)]
+// R-marked vocabularies are reserved for redirections.
 pub enum Vocabulary {
     Word = 0,
-    Amperstand, // &
+    Ampersand, // &
     And, // &&
     Backquote, // `
     Case, // case
@@ -55,7 +56,7 @@ impl Display for Vocabulary {
 pub fn map_to_vocab(representation: &str) -> Vocabulary {
     match representation {
         "!"     => Vocabulary::Neg,
-        "&"     => Vocabulary::Amperstand,
+        "&"     => Vocabulary::Ampersand,
         "&&"    => Vocabulary::And,
         "("     => Vocabulary::OpenParenthese,
         ")"     => Vocabulary::CloseParenthese,
