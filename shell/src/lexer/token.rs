@@ -21,6 +21,10 @@ impl Token {
         let vocab: Vocabulary = map_to_vocab(s);
         Token::new(s.to_string(), vocab)
     }
+
+    pub fn is_assignment_word(&self) -> bool {
+        self.vocab == Vocabulary::Word && self.representation.contains('=')
+    }
 }
 
 impl fmt::Display for Token {

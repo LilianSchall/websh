@@ -52,6 +52,27 @@ impl Display for Vocabulary {
     }
 }
 
+impl Vocabulary{
+    pub fn is_word(&self) -> bool {
+        matches!(self, Vocabulary::Word |
+            Vocabulary::IoNumber |
+            Vocabulary::Case |
+            Vocabulary::Do |
+            Vocabulary::Done |
+            Vocabulary::Elif |
+            Vocabulary::Else |
+            Vocabulary::Esac |
+            Vocabulary::Fi |
+            Vocabulary::For |
+            Vocabulary::If |
+            Vocabulary::In |
+            Vocabulary::Then |
+            Vocabulary::Until |
+            Vocabulary::While
+        )
+    }
+}
+
 
 pub fn map_to_vocab(representation: &str) -> Vocabulary {
     match representation {
@@ -96,6 +117,7 @@ pub fn map_to_vocab(representation: &str) -> Vocabulary {
         _       => Vocabulary::Word
     }
 }
+
 
 pub fn is_part_of_operator(representation: String, c: char) -> bool {
     let operators = vec!["$", "$(", "$((", "))", ";", "!", "&", "&&", "(", ")", ";;", "<", "<&", "<<", "<<-", "<>", ">", ">&", ">>", ">|", "\n", "`", "{", "|", "||", "}"];
