@@ -8,7 +8,7 @@ pub struct Filename(pub String);
 impl Parseable for Filename {
     fn parse(lexer: &mut Lexer) -> Result<Option<Filename>, ParseError> where Self: Sized {
         match lexer.peek() {
-            Some(token) if token.vocab == Vocabulary::Word => {
+            Some(token) if token.vocab.is_word() => {
                 let filename = token.representation.clone();
                 lexer.next();
                 Ok(Some(Filename(filename)))
