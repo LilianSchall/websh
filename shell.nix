@@ -8,5 +8,6 @@
       trunk
       cargo-binutils
       lld
+	  gdb
   ];
 })
