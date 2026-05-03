@@ -1,0 +1,14 @@
+[package]
+name = "web"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+leptos = { version = "0.8.19", features = ["csr"] }
+shell = { version = "0.1.0", path = "../shell" }
+stylance = "0.8.0"
+
+[package.metadata.stylance]
+output_file = "./styles/index.css"
+folders = ["./src/"]
+extensions = [".css", ".module.css", ".module.scss"]

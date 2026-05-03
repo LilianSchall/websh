@@ -1,0 +1,18 @@
+.promptline {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1rem;
+}
+
+.symbol {
+  color: #f0a060;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgb(240 160 96 / 30%);
+}
+
+.input {
+  color: #c8c8c8;
+  opacity: 0.9;
+}
