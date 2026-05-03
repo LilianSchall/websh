@@ -1,13 +1,14 @@
 .outputpane {
-  margin-top: 0.7rem;
+  margin: 0.2rem 0 0.85rem 1.7rem;
+  list-style: none;
+  padding: 0;
 }
 
 .line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  color: #c8c8c8;
-  opacity: 0.88;
+  margin: 0;
+  padding: 0.08rem 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 
 .plain {
@@ -24,16 +25,7 @@
   font-weight: 600;
 }
 
-.markdown_heading {
-  color: #f0a060;
-  font-weight: 700;
-}
-
 .error {
   color: #ff7a90;
   font-weight: 700;
-}
-
-.gap {
-  opacity: 0.1;
 }

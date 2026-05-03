@@ -1,7 +1,7 @@
 .pathline {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   font-size: 0.95rem;
   line-height: 1.4;
 }
@@ -11,14 +11,8 @@
   font-weight: 600;
 }
 
-.at,
 .separator {
   color: #7f8490;
-}
-
-.host {
-  color: #5a9fd4;
-  font-weight: 500;
 }
 
 .cwd {

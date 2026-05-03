@@ -1,8 +1,9 @@
 .promptline {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.7rem;
   font-size: 1rem;
+  margin-top: 0.2rem;
 }
 
 .symbol {
@@ -10,9 +11,55 @@
   font-size: 1.1rem;
   font-weight: 700;
   text-shadow: 0 0 10px rgb(240 160 96 / 30%);
+  line-height: 1.35;
+}
+
+.input_wrap {
+  flex: 1;
+  position: relative;
+  min-height: 1.4rem;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  color: #c8c8c8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  pointer-events: none;
+}
+
+.typed {
+  opacity: 0;
+}
+
+.ghost {
+  color: rgb(200 200 200 / 35%);
+}
+
+.tab_hint {
+  color: rgb(90 159 212 / 65%);
+  font-size: 0.9rem;
 }
 
 .input {
+  width: 100%;
+  min-height: 1.4rem;
+  field-sizing: content;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
   color: #c8c8c8;
-  opacity: 0.9;
+  font: inherit;
+  line-height: 1.35;
+  resize: none;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.input::placeholder {
+  color: rgb(200 200 200 / 32%);
 }
