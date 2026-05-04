@@ -4,7 +4,7 @@ use crate::lexer::Lexer;
 pub enum ParseError {
     UnexpectedToken(String),
     InvalidIoNumber(String),
-    EndOfInput,
+    EndOfInput(String),
 }
 
 pub trait Parseable {
