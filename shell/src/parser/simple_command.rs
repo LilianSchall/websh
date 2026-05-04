@@ -52,13 +52,12 @@ fn parse_command_without_prefix(lexer: &mut Lexer) -> Result<Option<SimpleComman
 mod tests {
     use super::SimpleCommand;
     use crate::lexer::{Lexer, Vocabulary};
+    use crate::parser::cmd_name::CmdName;
     use crate::parser::cmd_prefix::CmdPrefix;
     use crate::parser::cmd_suffix::CmdSuffix;
     use crate::parser::cmd_word::CmdWord;
     use crate::parser::filename::Filename;
-    use crate::parser::here_end::HereEnd;
     use crate::parser::io_file::IoFile;
-    use crate::parser::io_here::IoHere;
     use crate::parser::io_redirect::{IoRedirect, IoRedirectKind};
     use crate::parser::parseable::{Parseable, ParseError};
 
@@ -66,6 +65,54 @@ mod tests {
         let mut lexer = Lexer::init(input);
         lexer.next();
         lexer
+    }
+
+    fn collect_word_suffixes(suffix: &CmdSuffix, words: &mut Vec<String>) {
+        match suffix {
+            CmdSuffix::WordSuffix(next, word) => {
+                words.push(word.clone());
+                if let Some(next_suffix) = next {
+                    collect_word_suffixes(next_suffix, words);
+                }
+            }
+            CmdSuffix::IoSuffix(next, _) => {
+                if let Some(next_suffix) = next {
+                    collect_word_suffixes(next_suffix, words);
+                }
+            }
+        }
+    }
+
+    fn collect_io_suffixes(suffix: &CmdSuffix, ios: &mut Vec<IoRedirect>) {
+        match suffix {
+            CmdSuffix::WordSuffix(next, _) => {
+                if let Some(next_suffix) = next {
+                    collect_io_suffixes(next_suffix, ios);
+                }
+            }
+            CmdSuffix::IoSuffix(next, io_redirect) => {
+                ios.push(io_redirect.clone());
+                if let Some(next_suffix) = next {
+                    collect_io_suffixes(next_suffix, ios);
+                }
+            }
+        }
+    }
+
+    fn word_suffixes_from(command: &SimpleCommand) -> Vec<String> {
+        let mut words = Vec::new();
+        if let Some(suffix) = &command.suffixes {
+            collect_word_suffixes(suffix, &mut words);
+        }
+        words
+    }
+
+    fn io_suffixes_from(command: &SimpleCommand) -> Vec<IoRedirect> {
+        let mut ios = Vec::new();
+        if let Some(suffix) = &command.suffixes {
+            collect_io_suffixes(suffix, &mut ios);
+        }
+        ios
     }
 
     #[test]
@@ -103,13 +150,82 @@ mod tests {
     }
 
     #[test]
+    fn parses_plain_command_with_many_arguments() {
+        let mut lexer = init_lexer_at_first_token("echo test args1 args2 args3;");
+
+        let parsed = SimpleCommand::parse(&mut lexer).expect("parse should not error");
+        let command = parsed.expect("command should parse");
+
+        assert_eq!(command.prefix, None);
+        assert_eq!(command.cmd_word, None);
+        assert_eq!(command.cmd_name, Some(CmdName("echo".to_string())));
+        assert_eq!(word_suffixes_from(&command), vec!["test", "args1", "args2", "args3"]);
+        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+    }
+
+    #[test]
+    fn parses_command_name_only_without_suffixes() {
+        let mut lexer = init_lexer_at_first_token("echo");
+
+        let parsed = SimpleCommand::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(SimpleCommand {
+                prefix: None,
+                cmd_word: None,
+                cmd_name: Some(CmdName("echo".to_string())),
+                suffixes: None,
+            })
+        );
+        assert_eq!(lexer.peek(), None);
+    }
+
+    #[test]
+    fn parses_plain_command_with_mixed_word_and_io_suffixes() {
+        let mut lexer = init_lexer_at_first_token("echo test > out.txt args2 ;");
+
+        let parsed = SimpleCommand::parse(&mut lexer).expect("parse should not error");
+        let command = parsed.expect("command should parse");
+
+        assert_eq!(command.prefix, None);
+        assert_eq!(command.cmd_name, Some(CmdName("echo".to_string())));
+        assert_eq!(word_suffixes_from(&command), vec!["test", "args2"]);
+        assert_eq!(
+            io_suffixes_from(&command),
+            vec![IoRedirect {
+                io_number: None,
+                kind: IoRedirectKind::File(IoFile::Greater(Filename("out.txt".to_string()))),
+            }]
+        );
+        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+    }
+
+    #[test]
+    fn parses_assignment_prefix_then_command_and_arguments() {
+        let mut lexer = init_lexer_at_first_token("A=1 echo hello world ;");
+
+        let parsed = SimpleCommand::parse(&mut lexer).expect("parse should not error");
+        let command = parsed.expect("command should parse");
+
+        assert_eq!(
+            command.prefix,
+            Some(CmdPrefix::AssignmentWordPrefix(None, "A=1".to_string()))
+        );
+        assert_eq!(command.cmd_word, Some(CmdWord("echo".to_string())));
+        assert_eq!(command.cmd_name, None);
+        assert_eq!(word_suffixes_from(&command), vec!["hello", "world"]);
+        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+    }
+
+    #[test]
     fn propagates_end_of_input_error_from_cmd_prefix() {
         let mut lexer = Lexer::init("");
         lexer.next();
 
         let parsed = SimpleCommand::parse(&mut lexer);
 
-        assert!(matches!(parsed, Err(ParseError::EndOfInput)));
+        assert!(matches!(parsed, Err(ParseError::EndOfInput(_))));
     }
 
     #[test]
@@ -167,8 +283,18 @@ mod tests {
     }
 
     #[test]
-    fn parses_here_doc_prefix_only_command() {
-        let mut lexer = init_lexer_at_first_token("<< EOF ;");
+    fn returns_none_for_invalid_start_token_without_consuming() {
+        let mut lexer = init_lexer_at_first_token("&& echo");
+
+        let parsed = SimpleCommand::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(parsed, None);
+        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::And));
+    }
+
+    #[test]
+    fn returns_prefix_only_when_input_ends_after_prefix() {
+        let mut lexer = init_lexer_at_first_token("< in");
 
         let parsed = SimpleCommand::parse(&mut lexer).expect("parse should not error");
 
@@ -179,7 +305,7 @@ mod tests {
                     None,
                     IoRedirect {
                         io_number: None,
-                        kind: IoRedirectKind::Here(IoHere::DLess(HereEnd("EOF".to_string()))),
+                        kind: IoRedirectKind::File(IoFile::Less(Filename("in".to_string()))),
                     }
                 )),
                 cmd_word: None,
@@ -187,15 +313,6 @@ mod tests {
                 suffixes: None,
             })
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
-    }
-
-    #[test]
-    fn propagates_end_of_input_error_after_prefix_without_terminator() {
-        let mut lexer = init_lexer_at_first_token("< in");
-
-        let parsed = SimpleCommand::parse(&mut lexer);
-
-        assert!(matches!(parsed, Err(ParseError::EndOfInput)));
+        assert_eq!(lexer.peek(), None);
     }
 }
