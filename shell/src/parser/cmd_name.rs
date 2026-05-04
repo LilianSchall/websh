@@ -14,7 +14,7 @@ impl Parseable for CmdName {
             Some(_) => {
                 Ok(None)
             }
-            None => Err(ParseError::EndOfInput),
+            None => Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!()))),
         }
     }
 }
@@ -58,7 +58,7 @@ mod tests {
 
         let parsed = CmdName::parse(&mut lexer);
 
-        assert!(matches!(parsed, Err(ParseError::EndOfInput)));
+        assert!(matches!(parsed, Err(ParseError::EndOfInput(_))));
     }
 
     #[test]

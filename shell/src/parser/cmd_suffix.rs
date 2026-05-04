@@ -3,12 +3,6 @@ use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::Lexer;
 use crate::lexer::Vocabulary;
 
-/* cmd_suffix       :            io_redirect
-                 | cmd_suffix io_redirect
-                 |            WORD
-                 | cmd_suffix WORD
-*/
-
 #[derive(PartialEq, Clone, Debug)]
 pub enum CmdSuffix {
     IoSuffix(Option<Box<CmdSuffix>>, IoRedirect),
@@ -23,17 +17,21 @@ impl Parseable for CmdSuffix {
 
             return Ok(Some(CmdSuffix::IoSuffix(suffix, redirect)));
         }
+        
 
         match lexer.peek() {
             Some(token) if token.vocab == Vocabulary::Word => {
                 lexer.next();
-                let suffix = CmdSuffix::parse(lexer)?.map(Box::from);
+                let suffix = CmdSuffix::parse(lexer)
+                    .ok()
+                    .unwrap_or(None)
+                    .map(Box::from);
 
                 return Ok(Some(CmdSuffix::WordSuffix(suffix, token.representation)));
 
             },
             Some(_) =>  Ok(None),
-            None => Err(ParseError::EndOfInput)
+            None => Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!())))
         }
     }
 }
@@ -91,7 +89,7 @@ mod tests {
 
         let parsed = CmdSuffix::parse(&mut lexer);
 
-        assert!(matches!(parsed, Err(ParseError::EndOfInput)));
+        assert!(matches!(parsed, Err(ParseError::EndOfInput(_))));
     }
 
     #[test]
@@ -144,6 +142,6 @@ mod tests {
 
         let parsed = CmdSuffix::parse(&mut lexer);
 
-        assert!(matches!(parsed, Err(ParseError::EndOfInput)));
+        assert!(matches!(parsed, Err(ParseError::EndOfInput(_))));
     }
 }

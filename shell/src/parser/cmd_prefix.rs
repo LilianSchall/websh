@@ -12,7 +12,10 @@ pub enum CmdPrefix {
 impl Parseable for CmdPrefix {
     fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError> where Self: Sized {
         if let Some(redirect) = IoRedirect::parse(lexer)? {
-            let prefix = CmdPrefix::parse(lexer)?.map(Box::from);
+            let prefix = CmdPrefix::parse(lexer)
+                .ok()
+                .unwrap_or(None)
+                .map(Box::from);
 
             return Ok(Some(CmdPrefix::IoPrefix(prefix, redirect)));
         }
@@ -26,7 +29,7 @@ impl Parseable for CmdPrefix {
 
             },
             Some(_) =>  Ok(None),
-            None => Err(ParseError::EndOfInput)
+            None => Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!())))
         }
     }
 }
@@ -68,6 +71,26 @@ mod tests {
     }
 
     #[test]
+    fn parses_io_redirect_prefix_with_end() {
+        let mut lexer = init_lexer_at_first_token("< in.txt");
+
+        let parsed = CmdPrefix::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(CmdPrefix::IoPrefix(
+                None,
+                IoRedirect {
+                    io_number: None,
+                    kind: IoRedirectKind::File(IoFile::Less(Filename("in.txt".to_string()))),
+                }
+            ))
+        );
+        assert_eq!(lexer.peek().map(|token| token.vocab), None);
+    }
+
+
+    #[test]
     fn returns_none_for_non_prefix_token() {
         let mut lexer = init_lexer_at_first_token(";\n");
 
@@ -84,7 +107,7 @@ mod tests {
 
         let parsed = CmdPrefix::parse(&mut lexer);
 
-        assert!(matches!(parsed, Err(ParseError::EndOfInput)));
+        assert!(matches!(parsed, Err(ParseError::EndOfInput(_))));
     }
 
     #[test]
@@ -129,14 +152,5 @@ mod tests {
             ))
         );
         assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
-    }
-
-    #[test]
-    fn returns_end_of_input_error_after_redirect_when_no_followup_token() {
-        let mut lexer = init_lexer_at_first_token("< in");
-
-        let parsed = CmdPrefix::parse(&mut lexer);
-
-        assert!(matches!(parsed, Err(ParseError::EndOfInput)));
     }
 }
