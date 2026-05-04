@@ -17,7 +17,7 @@ impl Parseable for Separator {
             if let Some(linebreak) = Linebreak::parse(lexer)? {
                 return Ok(Some(Separator::OpLinebreak(op, linebreak)));
             }
-            return Err(ParseError::EndOfInput);       
+            return Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!())));       
         }
         if let Some(newline_list) = NewlineList::parse(lexer)? {
             return Ok(Some(Separator::NewlineList(newline_list)));
