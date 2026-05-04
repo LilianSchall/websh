@@ -11,7 +11,6 @@ impl Parseable for NewlineList {
     fn parse(lexer: &mut Lexer) -> Result<Option<NewlineList>, ParseError> where Self: Sized {
         let mut count = 0;
         while let Some(token) = lexer.peek() {
-            println!("peeked token: {:?}", token);
             match token.vocab {
                 Vocabulary::Newline => {
                     count += 1;
