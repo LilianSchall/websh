@@ -1,5 +1,4 @@
 use crate::parser::parseable::{Parseable, ParseError};
-use crate::lexer::vocab::Vocabulary;
 use crate::lexer::Lexer;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
