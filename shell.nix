@@ -9,5 +9,6 @@
       cargo-binutils
       lld
 	  gdb
+	  stylance-cli
   ];
 })
