@@ -1,19 +1,20 @@
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::{Lexer, Vocabulary};
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CmdName(pub String);
 
 impl Parseable for CmdName {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError>
+    where
+        Self: Sized,
+    {
         match lexer.peek() {
             Some(token) if token.vocab == Vocabulary::Word => {
                 lexer.next();
                 Ok(Some(CmdName(token.representation)))
-            },
-            Some(_) => {
-                Ok(None)
             }
+            Some(_) => Ok(None),
             None => Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!()))),
         }
     }
@@ -23,7 +24,7 @@ impl Parseable for CmdName {
 mod tests {
     use super::CmdName;
     use crate::lexer::{Lexer, Vocabulary};
-    use crate::parser::parseable::{Parseable, ParseError};
+    use crate::parser::parseable::{ParseError, Parseable};
 
     fn init_lexer_at_first_token(input: &str) -> Lexer<'_> {
         let mut lexer = Lexer::init(input);
@@ -38,7 +39,10 @@ mod tests {
         let parsed = CmdName::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(CmdName("echo".to_string())));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -68,7 +72,10 @@ mod tests {
         let parsed = CmdName::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(CmdName("printf".to_string())));
-        assert_eq!(lexer.peek().map(|token| token.representation), Some("value".to_string()));
+        assert_eq!(
+            lexer.peek().map(|token| token.representation),
+            Some("value".to_string())
+        );
     }
 
     #[test]
@@ -78,6 +85,9 @@ mod tests {
         let parsed = CmdName::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::While));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::While)
+        );
     }
 }

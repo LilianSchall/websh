@@ -8,11 +8,11 @@ use super::while_clause::WhileClause;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompoundCommand {
-	BraceGroup(BraceGroup),
-	Subshell(Subshell),
-	ForClause(ForClause),
-	CaseClause(CaseClause),
-	IfClause(IfClause),
-	WhileClause(WhileClause),
-	UntilClause(UntilClause),
+    BraceGroup(BraceGroup),
+    Subshell(Subshell),
+    ForClause(ForClause),
+    CaseClause(CaseClause),
+    IfClause(IfClause),
+    WhileClause(WhileClause),
+    UntilClause(UntilClause),
 }

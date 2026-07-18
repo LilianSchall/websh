@@ -1,5 +1,5 @@
-use crate::parser::parseable::{Parseable, ParseError};
-use crate::lexer::{Lexer};
+use crate::lexer::Lexer;
+use crate::parser::parseable::{ParseError, Parseable};
 
 use super::cmd_name::CmdName;
 use super::cmd_prefix::CmdPrefix;
@@ -8,44 +8,65 @@ use super::cmd_word::CmdWord;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SimpleCommand {
-	pub prefix: Option<CmdPrefix>,
-	pub cmd_word: Option<CmdWord>,
-	pub cmd_name: Option<CmdName>,
-	pub suffixes: Option<CmdSuffix>,
+    pub prefix: Option<CmdPrefix>,
+    pub cmd_word: Option<CmdWord>,
+    pub cmd_name: Option<CmdName>,
+    pub suffixes: Option<CmdSuffix>,
 }
 
 impl Parseable for SimpleCommand {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError>
+    where
+        Self: Sized,
+    {
         let maybe_prefix = CmdPrefix::parse(lexer)?;
 
         match maybe_prefix {
             Some(prefix) => parse_full_command(lexer, prefix),
-            None  => parse_command_without_prefix(lexer)
+            None => parse_command_without_prefix(lexer),
         }
     }
 }
 
-fn parse_full_command(lexer: &mut Lexer, prefix: CmdPrefix) -> Result<Option<SimpleCommand>, ParseError> {
+fn parse_full_command(
+    lexer: &mut Lexer,
+    prefix: CmdPrefix,
+) -> Result<Option<SimpleCommand>, ParseError> {
     let cmd_word = CmdWord::parse(lexer).ok().unwrap_or(None);
     if cmd_word.is_none() {
-        return Ok(Some(SimpleCommand { prefix: Some(prefix), cmd_word: None, cmd_name: None, suffixes: None }));
+        return Ok(Some(SimpleCommand {
+            prefix: Some(prefix),
+            cmd_word: None,
+            cmd_name: None,
+            suffixes: None,
+        }));
     }
 
     let suffix = CmdSuffix::parse(lexer).ok().unwrap_or(None);
 
-    Ok(Some(SimpleCommand { prefix: Some(prefix), cmd_word, cmd_name: None, suffixes: suffix }))
+    Ok(Some(SimpleCommand {
+        prefix: Some(prefix),
+        cmd_word,
+        cmd_name: None,
+        suffixes: suffix,
+    }))
 }
 
 fn parse_command_without_prefix(lexer: &mut Lexer) -> Result<Option<SimpleCommand>, ParseError> {
-    let cmd_name= CmdName::parse(lexer).ok().unwrap_or(None);
-    
+    let cmd_name = CmdName::parse(lexer).ok().unwrap_or(None);
+
     if cmd_name.is_none() {
         return Ok(None);
     }
 
     let suffix = CmdSuffix::parse(lexer).ok().unwrap_or(None);
 
-    Ok(Some(SimpleCommand { prefix: None, cmd_word: None, cmd_name, suffixes: suffix }))
+    Ok(Some(SimpleCommand {
+        prefix: None,
+        cmd_word: None,
+        cmd_name,
+        suffixes: suffix,
+    }))
 }
 
 #[cfg(test)]
@@ -59,7 +80,7 @@ mod tests {
     use crate::parser::filename::Filename;
     use crate::parser::io_file::IoFile;
     use crate::parser::io_redirect::{IoRedirect, IoRedirectKind};
-    use crate::parser::parseable::{Parseable, ParseError};
+    use crate::parser::parseable::{ParseError, Parseable};
 
     fn init_lexer_at_first_token(input: &str) -> Lexer<'_> {
         let mut lexer = Lexer::init(input);
@@ -136,7 +157,10 @@ mod tests {
                 suffixes: None,
             })
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -146,7 +170,10 @@ mod tests {
         let parsed = SimpleCommand::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -159,8 +186,14 @@ mod tests {
         assert_eq!(command.prefix, None);
         assert_eq!(command.cmd_word, None);
         assert_eq!(command.cmd_name, Some(CmdName("echo".to_string())));
-        assert_eq!(word_suffixes_from(&command), vec!["test", "args1", "args2", "args3"]);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            word_suffixes_from(&command),
+            vec!["test", "args1", "args2", "args3"]
+        );
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -198,7 +231,10 @@ mod tests {
                 kind: IoRedirectKind::File(IoFile::Greater(Filename("out.txt".to_string()))),
             }]
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -215,7 +251,10 @@ mod tests {
         assert_eq!(command.cmd_word, Some(CmdWord("echo".to_string())));
         assert_eq!(command.cmd_name, None);
         assert_eq!(word_suffixes_from(&command), vec!["hello", "world"]);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -279,7 +318,10 @@ mod tests {
                 )),
             })
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]

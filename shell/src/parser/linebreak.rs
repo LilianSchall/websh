@@ -1,15 +1,20 @@
 use super::newline_list::NewlineList;
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::Lexer;
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Linebreak {
-	pub newlines: Option<NewlineList>,
+    pub newlines: Option<NewlineList>,
 }
 
 impl Parseable for Linebreak {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Linebreak>, ParseError> where Self: Sized {
-        Ok(Some(Linebreak{ newlines: NewlineList::parse(lexer)?}))
+    fn parse(lexer: &mut Lexer) -> Result<Option<Linebreak>, ParseError>
+    where
+        Self: Sized,
+    {
+        Ok(Some(Linebreak {
+            newlines: NewlineList::parse(lexer)?,
+        }))
     }
 }
 
@@ -38,7 +43,10 @@ mod tests {
                 newlines: Some(NewlineList { count: 2 }),
             })
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -48,7 +56,10 @@ mod tests {
         let parsed = Linebreak::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(Linebreak { newlines: None }));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]

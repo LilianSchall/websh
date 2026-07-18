@@ -1,18 +1,21 @@
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::vocab::Vocabulary;
 use crate::lexer::Lexer;
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HereEnd(pub String);
 
 impl Parseable for HereEnd {
-    fn parse(lexer: &mut Lexer) -> Result<Option<HereEnd>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<HereEnd>, ParseError>
+    where
+        Self: Sized,
+    {
         Ok(match lexer.peek() {
             Some(token) if token.vocab == Vocabulary::Word => {
                 let here_end = token.representation.clone();
                 lexer.next();
                 Some(HereEnd(here_end))
-            },
+            }
             _ => None,
         })
     }
@@ -37,7 +40,10 @@ mod tests {
         let parsed = HereEnd::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(HereEnd("EOF".to_string())));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -47,7 +53,10 @@ mod tests {
         let parsed = HereEnd::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]

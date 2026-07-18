@@ -87,6 +87,176 @@ fn lexer_whitespace_is_a_token_separator_followed_by_newline() {
 }
 
 #[test]
+fn lexer_lex_io_number_after_word() {
+    assert_tokens(
+        "echo 2>file",
+        vec![
+            Token::new("echo".to_string(), Vocabulary::Word),
+            Token::new("2".to_string(), Vocabulary::IoNumber),
+            Token::new(">".to_string(), Vocabulary::RSup),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_lex_dont_lex_word_as_ionumber_after_word() {
+    assert_tokens(
+        "echo test>file",
+        vec![
+            Token::new("echo".to_string(), Vocabulary::Word),
+            Token::new("test".to_string(), Vocabulary::Word),
+            Token::new(">".to_string(), Vocabulary::RSup),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_at_start_with_greater() {
+    assert_tokens(
+        "2>file",
+        vec![
+            Token::new("2".to_string(), Vocabulary::IoNumber),
+            Token::new(">".to_string(), Vocabulary::RSup),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_at_start_with_less() {
+    assert_tokens(
+        "0<file",
+        vec![
+            Token::new("0".to_string(), Vocabulary::IoNumber),
+            Token::new("<".to_string(), Vocabulary::RInf),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_with_dgreat() {
+    assert_tokens(
+        "12>>file",
+        vec![
+            Token::new("12".to_string(), Vocabulary::IoNumber),
+            Token::new(">>".to_string(), Vocabulary::RSupSup),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_with_greatand() {
+    assert_tokens(
+        "1>&2",
+        vec![
+            Token::new("1".to_string(), Vocabulary::IoNumber),
+            Token::new(">&".to_string(), Vocabulary::RSupAnd),
+            Token::new("2".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_with_lessand() {
+    assert_tokens(
+        "3<&0",
+        vec![
+            Token::new("3".to_string(), Vocabulary::IoNumber),
+            Token::new("<&".to_string(), Vocabulary::RInfAnd),
+            Token::new("0".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_with_lessgreat() {
+    assert_tokens(
+        "4<>file",
+        vec![
+            Token::new("4".to_string(), Vocabulary::IoNumber),
+            Token::new("<>".to_string(), Vocabulary::RInfSup),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_with_clobber() {
+    assert_tokens(
+        "5>|file",
+        vec![
+            Token::new("5".to_string(), Vocabulary::IoNumber),
+            Token::new(">|".to_string(), Vocabulary::RSupPipe),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_with_dless() {
+    assert_tokens(
+        "6<<EOF",
+        vec![
+            Token::new("6".to_string(), Vocabulary::IoNumber),
+            Token::new("<<".to_string(), Vocabulary::InfInf),
+            Token::new("EOF".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_with_dlessdash() {
+    assert_tokens(
+        "7<<-EOF",
+        vec![
+            Token::new("7".to_string(), Vocabulary::IoNumber),
+            Token::new("<<-".to_string(), Vocabulary::InfInfMin),
+            Token::new("EOF".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_space_between_digits_and_operator_prevents_io_number() {
+    assert_tokens(
+        "2 >file",
+        vec![
+            Token::new("2".to_string(), Vocabulary::Word),
+            Token::new(">".to_string(), Vocabulary::RSup),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_multidigit() {
+    assert_tokens(
+        "99>file",
+        vec![
+            Token::new("99".to_string(), Vocabulary::IoNumber),
+            Token::new(">".to_string(), Vocabulary::RSup),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
+fn lexer_io_number_with_only_digits_but_less_operator() {
+    assert_tokens(
+        "42<file",
+        vec![
+            Token::new("42".to_string(), Vocabulary::IoNumber),
+            Token::new("<".to_string(), Vocabulary::RInf),
+            Token::new("file".to_string(), Vocabulary::Word),
+        ],
+    );
+}
+
+#[test]
 fn lexer_all_basic_operators() {
     assert_tokens(
         "! & && ( ) ;; < <& << <<- <> > >& >> >| ` { | || } ;",
@@ -207,7 +377,10 @@ fn lexer_dollar_parenthesis_operators_without_parameter_expansion() {
     assert_tokens(
         "$((x)) $( cmd )",
         vec![
-            Token::new("$((".to_string(), Vocabulary::DollarOpenParentheseParenthese),
+            Token::new(
+                "$((".to_string(),
+                Vocabulary::DollarOpenParentheseParenthese,
+            ),
             Token::new("x".to_string(), Vocabulary::Word),
             Token::new("))".to_string(), Vocabulary::CloseParentheseParenthese),
             Token::new("$(".to_string(), Vocabulary::DollarOpenParenthese),

@@ -1,5 +1,5 @@
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::{Lexer, Vocabulary};
+use crate::parser::parseable::{ParseError, Parseable};
 
 use super::io_redirect::IoRedirect;
 
@@ -10,12 +10,12 @@ pub enum CmdPrefix {
 }
 
 impl Parseable for CmdPrefix {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError>
+    where
+        Self: Sized,
+    {
         if let Some(redirect) = IoRedirect::parse(lexer)? {
-            let prefix = CmdPrefix::parse(lexer)
-                .ok()
-                .unwrap_or(None)
-                .map(Box::from);
+            let prefix = CmdPrefix::parse(lexer).ok().unwrap_or(None).map(Box::from);
 
             return Ok(Some(CmdPrefix::IoPrefix(prefix, redirect)));
         }
@@ -25,11 +25,13 @@ impl Parseable for CmdPrefix {
                 lexer.next();
                 let prefix = CmdPrefix::parse(lexer)?.map(Box::from);
 
-                return Ok(Some(CmdPrefix::AssignmentWordPrefix(prefix, token.representation)));
-
-            },
-            Some(_) =>  Ok(None),
-            None => Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!())))
+                return Ok(Some(CmdPrefix::AssignmentWordPrefix(
+                    prefix,
+                    token.representation,
+                )));
+            }
+            Some(_) => Ok(None),
+            None => Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!()))),
         }
     }
 }
@@ -43,7 +45,7 @@ mod tests {
     use crate::parser::io_file::IoFile;
     use crate::parser::io_here::IoHere;
     use crate::parser::io_redirect::{IoRedirect, IoRedirectKind};
-    use crate::parser::parseable::{Parseable, ParseError};
+    use crate::parser::parseable::{ParseError, Parseable};
 
     fn init_lexer_at_first_token(input: &str) -> Lexer<'_> {
         let mut lexer = Lexer::init(input);
@@ -67,7 +69,10 @@ mod tests {
                 }
             ))
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -89,7 +94,6 @@ mod tests {
         assert_eq!(lexer.peek().map(|token| token.vocab), None);
     }
 
-
     #[test]
     fn returns_none_for_non_prefix_token() {
         let mut lexer = init_lexer_at_first_token(";\n");
@@ -97,7 +101,10 @@ mod tests {
         let parsed = CmdPrefix::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -126,7 +133,10 @@ mod tests {
                 }
             ))
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -151,6 +161,9 @@ mod tests {
                 }
             ))
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 }

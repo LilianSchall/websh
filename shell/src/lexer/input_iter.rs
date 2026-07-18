@@ -11,7 +11,7 @@ pub struct InputIterator<'a> {
 impl<'a> InputIterator<'a> {
     pub fn new(input: &'a str) -> Self {
         let chars = input.chars();
-        let current_char = None; 
+        let current_char = None;
         let len = input.len();
         InputIterator {
             input: chars,

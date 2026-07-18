@@ -1,24 +1,27 @@
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::vocab::Vocabulary;
 use crate::lexer::Lexer;
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SeparatorOp {
-	Ampersand,
-	Semicolon,
+    Ampersand,
+    Semicolon,
 }
 
 impl Parseable for SeparatorOp {
-    fn parse(lexer: &mut Lexer) -> Result<Option<SeparatorOp>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<SeparatorOp>, ParseError>
+    where
+        Self: Sized,
+    {
         Ok(match lexer.peek() {
             Some(token) if token.vocab == Vocabulary::Ampersand => {
                 lexer.next();
                 Some(SeparatorOp::Ampersand)
-            },
+            }
             Some(token) if token.vocab == Vocabulary::Semicolon => {
                 lexer.next();
                 Some(SeparatorOp::Semicolon)
-            },
+            }
             _ => None,
         })
     }
@@ -43,7 +46,10 @@ mod tests {
         let parsed = SeparatorOp::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(SeparatorOp::Ampersand));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -53,7 +59,10 @@ mod tests {
         let parsed = SeparatorOp::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(SeparatorOp::Semicolon));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Newline));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Newline)
+        );
     }
 
     #[test]
@@ -63,7 +72,10 @@ mod tests {
         let parsed = SeparatorOp::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]

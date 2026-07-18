@@ -2,22 +2,25 @@ use super::linebreak::Linebreak;
 use super::newline_list::NewlineList;
 use super::separator_op::SeparatorOp;
 
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::Lexer;
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Separator {
-	OpLinebreak(SeparatorOp, Linebreak),
-	NewlineList(NewlineList),
+    OpLinebreak(SeparatorOp, Linebreak),
+    NewlineList(NewlineList),
 }
 
 impl Parseable for Separator {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Separator>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<Separator>, ParseError>
+    where
+        Self: Sized,
+    {
         if let Some(op) = SeparatorOp::parse(lexer)? {
             if let Some(linebreak) = Linebreak::parse(lexer)? {
                 return Ok(Some(Separator::OpLinebreak(op, linebreak)));
             }
-            return Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!())));       
+            return Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!())));
         }
         if let Some(newline_list) = NewlineList::parse(lexer)? {
             return Ok(Some(Separator::NewlineList(newline_list)));
@@ -56,7 +59,10 @@ mod tests {
                 },
             ))
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -72,7 +78,10 @@ mod tests {
                 Linebreak { newlines: None },
             ))
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -85,7 +94,10 @@ mod tests {
             parsed,
             Some(Separator::NewlineList(NewlineList { count: 2 }))
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -95,7 +107,10 @@ mod tests {
         let parsed = Separator::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]

@@ -1,21 +1,24 @@
-use super::list::List;
 use super::and_or::AndOr;
-use super::separator_op::SeparatorOp;
-use super::separator::Separator;
 use super::linebreak::Linebreak;
+use super::list::List;
 use super::newline_list::NewlineList;
+use super::separator::Separator;
+use super::separator_op::SeparatorOp;
 
 use crate::lexer::Lexer;
-use crate::parser::parseable::{Parseable, ParseError};
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompleteCommand {
-	pub list: List,
-	pub separator: Option<Separator>,
+    pub list: List,
+    pub separator: Option<Separator>,
 }
 
 impl Parseable for crate::parser::complete_command::CompleteCommand {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError>
+    where
+        Self: Sized,
+    {
         // 1. Parse the first mandatory AndOr
         let first_and_or = match AndOr::parse(lexer)? {
             Some(ao) => ao,
@@ -51,16 +54,16 @@ impl Parseable for crate::parser::complete_command::CompleteCommand {
                 // Parse the mandatory Linebreak as defined in your Separator logic
                 let linebreak = Linebreak::parse(lexer)?
                     .ok_or_else(|| ParseError::EndOfInput(format!("{}:{}", file!(), line!())))?;
-                
+
                 final_separator = Some(Separator::OpLinebreak(sep_op, linebreak));
                 break;
             }
         }
 
         // 3. Build the `List` AST right-associatively to match your original design
-        // Your enum: SeparatorOp(Box<List>, SeparatorOp, AndOr) 
+        // Your enum: SeparatorOp(Box<List>, SeparatorOp, AndOr)
         // Example: a ; b ; c -> SeparatorOp( Box( SeparatorOp(Box(c), ;, b) ), ;, a )
-        
+
         let mut and_ors_rev = and_ors.into_iter().rev();
         let mut sep_ops_rev = sep_ops.into_iter().rev();
 
@@ -93,7 +96,7 @@ mod tests {
     use crate::parser::io_here::IoHere;
     use crate::parser::io_redirect::{IoRedirect, IoRedirectKind};
     use crate::parser::list::List;
-    use crate::parser::parseable::{Parseable, ParseError};
+    use crate::parser::parseable::{ParseError, Parseable};
     use crate::parser::pipe_sequence::PipeSequence;
     use crate::parser::separator::Separator;
     use crate::parser::separator_op::SeparatorOp;
@@ -175,7 +178,10 @@ mod tests {
         let parsed = CompleteCommand::parse(&mut lexer).expect("parse should not error");
         let command = parsed.expect("command should parse");
 
-        assert!(matches!(command.separator, Some(Separator::OpLinebreak(SeparatorOp::Semicolon, _))));
+        assert!(matches!(
+            command.separator,
+            Some(Separator::OpLinebreak(SeparatorOp::Semicolon, _))
+        ));
         let first_command = first_command_of_list(&command.list);
         match first_command {
             Command::Simple(simple) => {
@@ -227,7 +233,10 @@ mod tests {
             }
             other => panic!("expected list with single pipeline, got {other:?}"),
         }
-        assert!(matches!(command.separator, Some(Separator::OpLinebreak(SeparatorOp::Semicolon, _))));
+        assert!(matches!(
+            command.separator,
+            Some(Separator::OpLinebreak(SeparatorOp::Semicolon, _))
+        ));
         assert_eq!(lexer.peek(), None);
     }
 
@@ -245,7 +254,10 @@ mod tests {
                     simple.prefix,
                     Some(CmdPrefix::AssignmentWordPrefix(_, _))
                 ));
-                assert_eq!(simple.cmd_word.as_ref().map(|word| word.0.clone()), Some("echo".to_string()));
+                assert_eq!(
+                    simple.cmd_word.as_ref().map(|word| word.0.clone()),
+                    Some("echo".to_string())
+                );
             }
             other => panic!("expected simple command, got {other:?}"),
         }
@@ -268,22 +280,13 @@ mod tests {
                 }
 
                 assert!(redirects.iter().any(|redirect| {
-                    matches!(
-                        redirect.kind,
-                        IoRedirectKind::File(IoFile::Less(_))
-                    )
+                    matches!(redirect.kind, IoRedirectKind::File(IoFile::Less(_)))
                 }));
                 assert!(redirects.iter().any(|redirect| {
-                    matches!(
-                        redirect.kind,
-                        IoRedirectKind::File(IoFile::Greater(_))
-                    )
+                    matches!(redirect.kind, IoRedirectKind::File(IoFile::Greater(_)))
                 }));
                 assert!(redirects.iter().any(|redirect| {
-                    matches!(
-                        redirect.kind,
-                        IoRedirectKind::Here(IoHere::DLess(_))
-                    )
+                    matches!(redirect.kind, IoRedirectKind::Here(IoHere::DLess(_)))
                 }));
             }
             other => panic!("expected simple command, got {other:?}"),
@@ -314,7 +317,10 @@ mod tests {
         let parsed = CompleteCommand::parse(&mut lexer).expect("parse should not error");
         let command = parsed.expect("command should parse");
 
-        assert!(matches!(command.list, List::SeparatorOp(_, SeparatorOp::Ampersand, _)));
+        assert!(matches!(
+            command.list,
+            List::SeparatorOp(_, SeparatorOp::Ampersand, _)
+        ));
         assert_eq!(lexer.peek(), None);
     }
 
@@ -369,6 +375,9 @@ mod tests {
         let parsed = CompleteCommand::parse(&mut lexer);
 
         assert!(matches!(parsed, Err(ParseError::EndOfInput(_))));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 }

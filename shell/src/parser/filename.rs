@@ -1,11 +1,14 @@
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::Lexer;
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Filename(pub String);
 
 impl Parseable for Filename {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Filename>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<Filename>, ParseError>
+    where
+        Self: Sized,
+    {
         match lexer.peek() {
             Some(token) if token.vocab.is_word() => {
                 let filename = token.representation.clone();
@@ -36,7 +39,10 @@ mod tests {
         let parsed = Filename::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(Filename("file.txt".to_string())));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]

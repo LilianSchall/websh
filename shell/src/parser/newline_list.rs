@@ -1,21 +1,24 @@
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::vocab::Vocabulary;
 use crate::lexer::Lexer;
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NewlineList {
-	pub count: usize,
+    pub count: usize,
 }
 
 impl Parseable for NewlineList {
-    fn parse(lexer: &mut Lexer) -> Result<Option<NewlineList>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<NewlineList>, ParseError>
+    where
+        Self: Sized,
+    {
         let mut count = 0;
         while let Some(token) = lexer.peek() {
             match token.vocab {
                 Vocabulary::Newline => {
                     count += 1;
                     lexer.next();
-                },
+                }
                 _ => break,
             }
         }
@@ -56,7 +59,10 @@ mod tests {
         let parsed = NewlineList::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(NewlineList { count: 2 }));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -66,7 +72,10 @@ mod tests {
         let parsed = NewlineList::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]

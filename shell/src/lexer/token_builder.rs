@@ -1,4 +1,4 @@
-use crate::lexer::Token;
+use crate::lexer::{Token, Vocabulary};
 
 pub struct TokenBuilder {
     pub is_building_operator: bool,
@@ -6,11 +6,10 @@ pub struct TokenBuilder {
 }
 
 impl TokenBuilder {
-
     pub fn new(is_building_operator: bool, buffer: String) -> TokenBuilder {
         TokenBuilder {
             is_building_operator,
-            buffer
+            buffer,
         }
     }
 
@@ -22,10 +21,10 @@ impl TokenBuilder {
         self.buffer.push(c);
     }
 
-    pub fn flush(&mut self) -> Option<Token> {
+    pub fn flush(&mut self, delimiter_type: Vocabulary) -> Option<Token> {
         let token = match self.buffer.is_empty() {
             true => None,
-            false => Some(Token::from_str(self.buffer.as_str()))
+            false => Some(Token::from_str(self.buffer.as_str(), delimiter_type)),
         };
 
         self.buffer.clear();

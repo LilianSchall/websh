@@ -1,19 +1,20 @@
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::{Lexer, Vocabulary};
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CmdWord(pub String);
 
 impl Parseable for CmdWord {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError>
+    where
+        Self: Sized,
+    {
         match lexer.peek() {
             Some(token) if token.vocab == Vocabulary::Word => {
                 lexer.next();
                 Ok(Some(CmdWord(token.representation)))
-            },
-            Some(_) => {
-                Ok(None)
             }
+            Some(_) => Ok(None),
             None => Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!()))),
         }
     }
@@ -23,7 +24,7 @@ impl Parseable for CmdWord {
 mod tests {
     use super::CmdWord;
     use crate::lexer::{Lexer, Vocabulary};
-    use crate::parser::parseable::{Parseable, ParseError};
+    use crate::parser::parseable::{ParseError, Parseable};
 
     fn init_lexer_at_first_token(input: &str) -> Lexer<'_> {
         let mut lexer = Lexer::init(input);
@@ -38,7 +39,10 @@ mod tests {
         let parsed = CmdWord::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(CmdWord("echo".to_string())));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -48,7 +52,10 @@ mod tests {
         let parsed = CmdWord::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -68,7 +75,10 @@ mod tests {
         let parsed = CmdWord::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(CmdWord("echo".to_string())));
-        assert_eq!(lexer.peek().map(|token| token.representation), Some("hello".to_string()));
+        assert_eq!(
+            lexer.peek().map(|token| token.representation),
+            Some("hello".to_string())
+        );
     }
 
     #[test]

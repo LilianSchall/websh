@@ -4,7 +4,7 @@ use super::linebreak::Linebreak;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionDefinition {
-	pub fname: Fname,
-	pub linebreak: Linebreak,
-	pub body: FunctionBody,
+    pub fname: Fname,
+    pub linebreak: Linebreak,
+    pub body: FunctionBody,
 }

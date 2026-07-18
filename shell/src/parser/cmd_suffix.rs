@@ -1,7 +1,7 @@
 use super::io_redirect::IoRedirect;
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::Lexer;
 use crate::lexer::Vocabulary;
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum CmdSuffix {
@@ -9,29 +9,26 @@ pub enum CmdSuffix {
     WordSuffix(Option<Box<CmdSuffix>>, String),
 }
 
-
 impl Parseable for CmdSuffix {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError>
+    where
+        Self: Sized,
+    {
         if let Some(redirect) = IoRedirect::parse(lexer)? {
-            let suffix = CmdSuffix::parse(lexer)?.map(Box::from);
+            let suffix = CmdSuffix::parse(lexer).ok().unwrap_or(None).map(Box::from);
 
             return Ok(Some(CmdSuffix::IoSuffix(suffix, redirect)));
         }
-        
 
         match lexer.peek() {
             Some(token) if token.vocab == Vocabulary::Word => {
                 lexer.next();
-                let suffix = CmdSuffix::parse(lexer)
-                    .ok()
-                    .unwrap_or(None)
-                    .map(Box::from);
+                let suffix = CmdSuffix::parse(lexer).ok().unwrap_or(None).map(Box::from);
 
                 return Ok(Some(CmdSuffix::WordSuffix(suffix, token.representation)));
-
-            },
-            Some(_) =>  Ok(None),
-            None => Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!())))
+            }
+            Some(_) => Ok(None),
+            None => Err(ParseError::EndOfInput(format!("{}:{}", file!(), line!()))),
         }
     }
 }
@@ -45,7 +42,7 @@ mod tests {
     use crate::parser::io_file::IoFile;
     use crate::parser::io_here::IoHere;
     use crate::parser::io_redirect::{IoRedirect, IoRedirectKind};
-    use crate::parser::parseable::{Parseable, ParseError};
+    use crate::parser::parseable::{ParseError, Parseable};
 
     fn init_lexer_at_first_token(input: &str) -> Lexer<'_> {
         let mut lexer = Lexer::init(input);
@@ -69,7 +66,10 @@ mod tests {
                 }
             ))
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -79,7 +79,10 @@ mod tests {
         let parsed = CmdSuffix::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -108,7 +111,10 @@ mod tests {
                 }
             ))
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -133,7 +139,10 @@ mod tests {
                 }
             ))
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -142,6 +151,15 @@ mod tests {
 
         let parsed = CmdSuffix::parse(&mut lexer);
 
-        assert!(matches!(parsed, Err(ParseError::EndOfInput(_))));
+        assert!(matches!(
+            parsed,
+            Ok(Some(CmdSuffix::IoSuffix(
+                None,
+                IoRedirect {
+                    io_number: None,
+                    kind: IoRedirectKind::File(IoFile::Greater(Filename(_)))
+                }
+            )))
+        ));
     }
 }

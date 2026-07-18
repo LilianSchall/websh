@@ -1,26 +1,29 @@
 use super::here_end::HereEnd;
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::Lexer;
 use crate::lexer::Vocabulary;
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum IoHere {
-	DLess(HereEnd),
-	DLessDash(HereEnd),
+    DLess(HereEnd),
+    DLessDash(HereEnd),
 }
 
 impl Parseable for IoHere {
-    fn parse(lexer: &mut Lexer) -> Result<Option<IoHere>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<IoHere>, ParseError>
+    where
+        Self: Sized,
+    {
         Ok(match lexer.peek() {
             Some(token) => match token.vocab {
                 Vocabulary::InfInf => {
                     lexer.next();
                     HereEnd::parse(lexer)?.map(IoHere::DLess)
-                },
+                }
                 Vocabulary::InfInfMin => {
                     lexer.next();
                     HereEnd::parse(lexer)?.map(IoHere::DLessDash)
-                },
+                }
                 _ => None,
             },
             None => None,
@@ -48,7 +51,10 @@ mod tests {
         let parsed = IoHere::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(IoHere::DLess(HereEnd("EOF".to_string()))));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -58,7 +64,10 @@ mod tests {
         let parsed = IoHere::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, Some(IoHere::DLessDash(HereEnd("EOF".to_string()))));
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -68,7 +77,10 @@ mod tests {
         let parsed = IoHere::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -78,7 +90,10 @@ mod tests {
         let parsed = IoHere::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -88,7 +103,10 @@ mod tests {
         let parsed = IoHere::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]

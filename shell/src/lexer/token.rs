@@ -1,9 +1,7 @@
 use super::vocab::{map_to_vocab, Vocabulary};
 use std::fmt;
 
-
-#[derive(Debug, Clone)]
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     pub representation: String,
     pub vocab: Vocabulary,
@@ -17,8 +15,8 @@ impl Token {
         }
     }
 
-    pub fn from_str(s: &str) -> Token {
-        let vocab: Vocabulary = map_to_vocab(s);
+    pub fn from_str(s: &str, delimiter_type: Vocabulary) -> Token {
+        let vocab: Vocabulary = map_to_vocab(s, delimiter_type);
         Token::new(s.to_string(), vocab)
     }
 

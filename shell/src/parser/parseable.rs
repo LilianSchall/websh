@@ -8,5 +8,7 @@ pub enum ParseError {
 }
 
 pub trait Parseable {
-    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError> where Self: Sized;
+    fn parse(lexer: &mut Lexer) -> Result<Option<Self>, ParseError>
+    where
+        Self: Sized;
 }

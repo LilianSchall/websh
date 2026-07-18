@@ -3,6 +3,6 @@ use super::do_group::DoGroup;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UntilClause {
-	pub condition: CompoundList,
-	pub do_group: DoGroup,
+    pub condition: CompoundList,
+    pub do_group: DoGroup,
 }

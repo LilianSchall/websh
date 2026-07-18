@@ -1,31 +1,35 @@
 use super::io_file::IoFile;
 use super::io_here::IoHere;
-use crate::parser::parseable::{Parseable, ParseError};
 use crate::lexer::Lexer;
 use crate::lexer::Vocabulary;
+use crate::parser::parseable::{ParseError, Parseable};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum IoRedirectKind {
-	File(IoFile),
-	Here(IoHere),
+    File(IoFile),
+    Here(IoHere),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct IoRedirect {
-	pub io_number: Option<u32>,
-	pub kind: IoRedirectKind,
+    pub io_number: Option<u32>,
+    pub kind: IoRedirectKind,
 }
 
 impl Parseable for IoRedirect {
-    fn parse(lexer: &mut Lexer) -> Result<Option<IoRedirect>, ParseError> where Self: Sized {
+    fn parse(lexer: &mut Lexer) -> Result<Option<IoRedirect>, ParseError>
+    where
+        Self: Sized,
+    {
         let io_number = match lexer.peek() {
             Some(token) if token.vocab == Vocabulary::IoNumber => {
-                let num = token.representation
+                let num = token
+                    .representation
                     .parse::<u32>()
                     .map_err(|_| ParseError::InvalidIoNumber(token.representation.clone()))?;
                 lexer.next();
                 Some(num)
-            },
+            }
             _ => None,
         };
 
@@ -76,7 +80,10 @@ mod tests {
                 kind: IoRedirectKind::File(IoFile::Less(Filename("in".to_string()))),
             })
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -92,7 +99,10 @@ mod tests {
                 kind: IoRedirectKind::Here(IoHere::DLess(HereEnd("EOF".to_string()))),
             })
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -102,7 +112,10 @@ mod tests {
         let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 
     #[test]
@@ -112,7 +125,10 @@ mod tests {
         let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -129,12 +145,30 @@ mod tests {
     #[test]
     fn parses_all_io_file_variants() {
         let cases = vec![
-            ("<& in ;", IoRedirectKind::File(IoFile::LessAnd(Filename("in".to_string())))),
-            ("> out ;", IoRedirectKind::File(IoFile::Greater(Filename("out".to_string())))),
-            (">& out ;", IoRedirectKind::File(IoFile::GreatAnd(Filename("out".to_string())))),
-            (">> out ;", IoRedirectKind::File(IoFile::DGreat(Filename("out".to_string())))),
-            ("<> out ;", IoRedirectKind::File(IoFile::LessGreat(Filename("out".to_string())))),
-            (">| out ;", IoRedirectKind::File(IoFile::Clobber(Filename("out".to_string())))),
+            (
+                "<& in ;",
+                IoRedirectKind::File(IoFile::LessAnd(Filename("in".to_string()))),
+            ),
+            (
+                "> out ;",
+                IoRedirectKind::File(IoFile::Greater(Filename("out".to_string()))),
+            ),
+            (
+                ">& out ;",
+                IoRedirectKind::File(IoFile::GreatAnd(Filename("out".to_string()))),
+            ),
+            (
+                ">> out ;",
+                IoRedirectKind::File(IoFile::DGreat(Filename("out".to_string()))),
+            ),
+            (
+                "<> out ;",
+                IoRedirectKind::File(IoFile::LessGreat(Filename("out".to_string()))),
+            ),
+            (
+                ">| out ;",
+                IoRedirectKind::File(IoFile::Clobber(Filename("out".to_string()))),
+            ),
         ];
 
         for (input, expected_kind) in cases {
@@ -148,7 +182,10 @@ mod tests {
                     kind: expected_kind,
                 })
             );
-            assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+            assert_eq!(
+                lexer.peek().map(|token| token.vocab),
+                Some(Vocabulary::Semicolon)
+            );
         }
     }
 
@@ -165,7 +202,10 @@ mod tests {
                 kind: IoRedirectKind::Here(IoHere::DLessDash(HereEnd("EOF".to_string()))),
             })
         );
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -175,7 +215,10 @@ mod tests {
         let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Semicolon));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
     }
 
     #[test]
@@ -185,6 +228,174 @@ mod tests {
         let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
 
         assert_eq!(parsed, None);
-        assert_eq!(lexer.peek().map(|token| token.vocab), Some(Vocabulary::Word));
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
+    }
+
+    #[test]
+    fn parses_io_number_with_greater_redirect() {
+        let mut lexer = init_lexer_at_first_token("2>file ;");
+
+        let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(IoRedirect {
+                io_number: Some(2),
+                kind: IoRedirectKind::File(IoFile::Greater(Filename("file".to_string()))),
+            })
+        );
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
+    }
+
+    #[test]
+    fn parses_io_number_with_less_redirect() {
+        let mut lexer = init_lexer_at_first_token("0<file ;");
+
+        let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(IoRedirect {
+                io_number: Some(0),
+                kind: IoRedirectKind::File(IoFile::Less(Filename("file".to_string()))),
+            })
+        );
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
+    }
+
+    #[test]
+    fn parses_io_number_with_dgreat_redirect() {
+        let mut lexer = init_lexer_at_first_token("99>>file ;");
+
+        let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(IoRedirect {
+                io_number: Some(99),
+                kind: IoRedirectKind::File(IoFile::DGreat(Filename("file".to_string()))),
+            })
+        );
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
+    }
+
+    #[test]
+    fn parses_io_number_with_greatand_redirect() {
+        let mut lexer = init_lexer_at_first_token("1>&2 ;");
+
+        let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(IoRedirect {
+                io_number: Some(1),
+                kind: IoRedirectKind::File(IoFile::GreatAnd(Filename("2".to_string()))),
+            })
+        );
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
+    }
+
+    #[test]
+    fn parses_io_number_with_lessand_redirect() {
+        let mut lexer = init_lexer_at_first_token("3<&0 ;");
+
+        let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(IoRedirect {
+                io_number: Some(3),
+                kind: IoRedirectKind::File(IoFile::LessAnd(Filename("0".to_string()))),
+            })
+        );
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
+    }
+
+    #[test]
+    fn parses_io_number_with_clobber_redirect() {
+        let mut lexer = init_lexer_at_first_token("5>|file ;");
+
+        let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(IoRedirect {
+                io_number: Some(5),
+                kind: IoRedirectKind::File(IoFile::Clobber(Filename("file".to_string()))),
+            })
+        );
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
+    }
+
+    #[test]
+    fn parses_io_number_with_dless_redirect() {
+        let mut lexer = init_lexer_at_first_token("6<<EOF ;");
+
+        let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(IoRedirect {
+                io_number: Some(6),
+                kind: IoRedirectKind::Here(IoHere::DLess(HereEnd("EOF".to_string()))),
+            })
+        );
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
+    }
+
+    #[test]
+    fn parses_io_number_with_dlessdash_redirect() {
+        let mut lexer = init_lexer_at_first_token("7<<-EOF ;");
+
+        let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(
+            parsed,
+            Some(IoRedirect {
+                io_number: Some(7),
+                kind: IoRedirectKind::Here(IoHere::DLessDash(HereEnd("EOF".to_string()))),
+            })
+        );
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Semicolon)
+        );
+    }
+
+    #[test]
+    fn doesnt_parse_io_number_with_space_between_digits_and_redirect() {
+        let mut lexer = init_lexer_at_first_token("2 >file ;");
+
+        let parsed = IoRedirect::parse(&mut lexer).expect("parse should not error");
+
+        assert_eq!(parsed, None);
+        assert_eq!(
+            lexer.peek().map(|token| token.vocab),
+            Some(Vocabulary::Word)
+        );
     }
 }
