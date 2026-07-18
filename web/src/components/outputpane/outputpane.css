@@ -9,6 +9,8 @@
   padding: 0.08rem 0;
   font-size: 0.95rem;
   line-height: 1.45;
+  white-space: pre-wrap;
+  tab-size: 4;
 }
 
 .plain {

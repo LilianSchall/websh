@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use leptos::html;
 use shell::lexer::Lexer;
-use shell::lexer::Vocabulary;
+use shell::parser::parse;
 
 use crate::components::outputpane::{OutputKind, OutputLine, Outputpane};
 use crate::components::pathline::Pathline;
@@ -17,26 +17,6 @@ struct TerminalEntry {
     outputs: Vec<OutputLine>,
 }
 
-fn classify_token(vocabulary: Vocabulary) -> OutputKind {
-    match vocabulary {
-        Vocabulary::Word | Vocabulary::IoNumber => OutputKind::Directory,
-        Vocabulary::Case
-        | Vocabulary::Do
-        | Vocabulary::Done
-        | Vocabulary::Elif
-        | Vocabulary::Else
-        | Vocabulary::Esac
-        | Vocabulary::Fi
-        | Vocabulary::For
-        | Vocabulary::If
-        | Vocabulary::In
-        | Vocabulary::Then
-        | Vocabulary::Until
-        | Vocabulary::While => OutputKind::Executable,
-        _ => OutputKind::Plain,
-    }
-}
-
 #[component]
 pub fn Shell() -> impl IntoView {
     let (history, set_history) = signal(Vec::<String>::new());
@@ -46,20 +26,30 @@ pub fn Shell() -> impl IntoView {
 
     let on_submit = Callback::new(move |command: String| {
         let mut lexer = Lexer::init(command.as_str());
+        lexer.next();
+
         let mut next_output_lines = Vec::<OutputLine>::new();
 
-        while let Some(token) = lexer.next() {
-            next_output_lines.push(OutputLine {
-                text: format!("- {} => {}", token.vocab, token.representation),
-                kind: classify_token(token.vocab),
-            });
-        }
+        match parse(&mut lexer) {
+            Some(ast) => {
+                let ast_pretty = format!("{:#?}", ast);
 
-        if next_output_lines.is_empty() {
-            next_output_lines.push(OutputLine {
-                text: "- no token generated".to_string(),
-                kind: OutputKind::Error,
-            });
+                next_output_lines.push(OutputLine {
+                    text: "AST:".to_string(),
+                    kind: OutputKind::Executable,
+                });
+
+                next_output_lines.extend(ast_pretty.lines().map(|line| OutputLine {
+                    text: line.to_string(),
+                    kind: OutputKind::Plain,
+                }));
+            }
+            None => {
+                next_output_lines.push(OutputLine {
+                    text: "Parse error: parser returned None".to_string(),
+                    kind: OutputKind::Error,
+                });
+            }
         }
 
         let entry_id = next_entry_id.get_untracked();

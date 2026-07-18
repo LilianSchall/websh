@@ -5,7 +5,6 @@ stylance::import_style!(style, "outputpane.css");
 #[derive(Clone)]
 pub enum OutputKind {
     Plain,
-    Directory,
     Executable,
     Error,
 }
@@ -21,7 +20,6 @@ pub fn Outputpane(#[prop(optional)] lines: Vec<OutputLine>) -> impl IntoView {
     let rendered = lines.into_iter().map(|line| {
         let class_name = match line.kind {
             OutputKind::Plain => style::plain,
-            OutputKind::Directory => style::directory,
             OutputKind::Executable => style::executable,
             OutputKind::Error => style::error,
         };

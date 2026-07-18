@@ -46,7 +46,7 @@ fn levenshtein(lhs: &str, rhs: &str) -> usize {
 
 fn closest_history_match(input: &str, history: &[String]) -> Option<String> {
     if input.trim().is_empty() {
-        return history.last().cloned();
+        return None;
     }
 
     let normalized_input = input.to_lowercase();
